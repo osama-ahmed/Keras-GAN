@@ -1,20 +1,28 @@
 from __future__ import print_function, division
 import scipy
 
-from keras.datasets import mnist
-from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, Concatenate
-from keras.layers import BatchNormalization, Activation, ZeroPadding2D
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.convolutional import UpSampling2D, Conv2D
-from keras.models import Sequential, Model
-from keras.optimizers import Adam
+from tensorflow.keras import backend
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout, Concatenate
+from tensorflow.keras.layers import BatchNormalization, Activation, ZeroPadding2D
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.optimizers import Adam
 import datetime
 import matplotlib.pyplot as plt
 import sys
-from data_loader import DataLoader
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from tensorflow.keras.models import load_model
+import pickle
+import h5py
+from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import UpSampling2D, Conv2D
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.initializers import glorot_uniform
 
 class Pix2Pix():
     def __init__(self):
@@ -150,10 +158,13 @@ class Pix2Pix():
         # Adversarial loss ground truths
         valid = np.ones((batch_size,) + self.disc_patch)
         fake = np.zeros((batch_size,) + self.disc_patch)
+        
+        print('hello')
 
         for epoch in range(epochs):
+            print('hello')
             for batch_i, (imgs_A, imgs_B) in enumerate(self.data_loader.load_batch(batch_size)):
-
+                print('osama')
                 # ---------------------
                 #  Train Discriminator
                 # ---------------------
@@ -212,4 +223,32 @@ class Pix2Pix():
 
 if __name__ == '__main__':
     gan = Pix2Pix()
-    gan.train(epochs=200, batch_size=1, sample_interval=200)
+    
+    ### training and saving models
+#    gan.train(epochs=200, batch_size=1, sample_interval=50)
+#    gan.discriminator.save('saved_model/edges2cats/discriminator.h5')
+#    gan.generator.save('saved_model/edges2cats/generator.h5')
+#    gan.combined.save('saved_model/edges2cats/combined.h5')
+##    with open('saved_model/edges2cats/pix2pix.pkl', 'wb') as output:
+##        pickle.dump(gan, output, pickle.HIGHEST_PROTOCOL)
+    
+    ### load the saved model and sampling
+    with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+        generator = load_model('Colab/facades/generator.h5')
+    gan.generator=generator
+    gan.sample_images(1000,1000)
+#    
+#    ### prediction step
+#    imgs_A, imgs_B = gan.data_loader.load_data(batch_size=1, is_testing=True)
+#    img=imgs_B[0]
+##    mpimg.imsave('image.png',img)
+    img=mpimg.imread('images/facades/1000_1000.png')
+    imgplot = plt.imshow(img)
+    plt.show()
+#    x=np.zeros([1,256,256,3])
+#    x[0]=img
+#    fake=generator.predict(x)
+#    fake=0.5 * fake + 0.5
+#    plt.show(fake[0])
+#    plt.show()
+#    mpimg.imsave('fake.png',fake[0])
